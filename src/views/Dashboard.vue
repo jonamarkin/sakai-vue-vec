@@ -120,26 +120,28 @@ watch(
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Orders</span>
-                        <div class="text-900 font-medium text-xl">152</div>
+                        <span class="block text-500 font-medium mb-3">Audience</span>
+                        <div class="text-900 font-medium text-xl">1500</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-shopping-cart text-blue-500 text-xl"></i>
+                    <div class="flex align-items-center justify-content-center bg-blue-100 border-round"
+                        style="width: 2.5rem; height: 2.5rem">
+                        <i class="pi pi-users text-blue-500 text-xl"></i>
                     </div>
                 </div>
                 <span class="text-green-500 font-medium">24 new </span>
-                <span class="text-500">since last visit</span>
+                <span class="text-500">since last concert</span>
             </div>
         </div>
         <div class="col-12 lg:col-6 xl:col-3">
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Revenue</span>
+                        <span class="block text-500 font-medium mb-3">Donations</span>
                         <div class="text-900 font-medium text-xl">$2.100</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-map-marker text-orange-500 text-xl"></i>
+                    <div class="flex align-items-center justify-content-center bg-orange-100 border-round"
+                        style="width: 2.5rem; height: 2.5rem">
+                        <i class="pi pi-money-bill text-orange-500 text-xl"></i>
                     </div>
                 </div>
                 <span class="text-green-500 font-medium">%52+ </span>
@@ -150,11 +152,12 @@ watch(
             <div class="card mb-0">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Customers</span>
+                        <span class="block text-500 font-medium mb-3">Special Guests</span>
                         <div class="text-900 font-medium text-xl">28441</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" style="width: 2.5rem; height: 2.5rem">
-                        <i class="pi pi-inbox text-cyan-500 text-xl"></i>
+                    <div class="flex align-items-center justify-content-center bg-cyan-100 border-round"
+                        style="width: 2.5rem; height: 2.5rem">
+                        <i class="pi pi-user text-cyan-500 text-xl"></i>
                     </div>
                 </div>
                 <span class="text-green-500 font-medium">520 </span>
@@ -168,7 +171,8 @@ watch(
                         <span class="block text-500 font-medium mb-3">Comments</span>
                         <div class="text-900 font-medium text-xl">152 Unread</div>
                     </div>
-                    <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width: 2.5rem; height: 2.5rem">
+                    <div class="flex align-items-center justify-content-center bg-purple-100 border-round"
+                        style="width: 2.5rem; height: 2.5rem">
                         <i class="pi pi-comment text-purple-500 text-xl"></i>
                     </div>
                 </div>
@@ -177,7 +181,7 @@ watch(
             </div>
         </div>
 
-        <div class="col-12 xl:col-6">
+        <!-- <div class="col-12 xl:col-6">
             <div class="card">
                 <h5>Recent Sales</h5>
                 <DataTable :value="products" :rows="5" :paginator="true" responsiveLayout="scroll">
@@ -351,7 +355,7 @@ watch(
                 <div class="mt-4 mr-auto md:mt-0 md:mr-0">
                     <a href="https://www.primefaces.org/primeblocks-vue" class="p-button font-bold px-5 py-3 p-button-warning p-button-rounded p-button-raised"> Get Started </a>
                 </div>
-            </div>
-        </div>
+            </div> 
+        </div>-->
     </div>
 </template>
