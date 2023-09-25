@@ -1,7 +1,8 @@
 <script setup>
 import { FilterMatchMode } from 'primevue/api';
-import { ref, onMounted, onBeforeMount } from 'vue';
+import { ref, onMounted, onBeforeMount, computed } from 'vue';
 import ProductService from '@/service/ProductService';
+import AudienceService from '@/service/AudienceService';
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
@@ -21,26 +22,36 @@ const statuses = ref([
     { label: 'OUTOFSTOCK', value: 'outofstock' }
 ]);
 
+const audiences = ref(null);
+const audienceDialog = ref(false);
+const deleteAudienceDialog = ref(false);
+const deleteAudiencesDialog = ref(false);
+const audience = ref({});
+const selectedAudiences = ref(null);
+
+
 const productService = new ProductService();
+const audienceService = new AudienceService();
 
 onBeforeMount(() => {
     initFilters();
 });
 onMounted(() => {
-    productService.getProducts().then((data) => (products.value = data));
+    // productService.getProducts().then((data) => (products.value = data));
+    audienceService.getAudience().then((data) => (audiences.value = data));
 });
 const formatCurrency = (value) => {
     return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 };
 
 const openNew = () => {
-    product.value = {};
+    audience.value = {};
     submitted.value = false;
-    productDialog.value = true;
+    audienceDialog.value = true;
 };
 
 const hideDialog = () => {
-    productDialog.value = false;
+    audienceDialog.value = false;
     submitted.value = false;
 };
 
@@ -59,33 +70,33 @@ const saveProduct = () => {
             products.value.push(product.value);
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
         }
-        productDialog.value = false;
-        product.value = {};
+        audienceDialog.value = false;
+        audience.value = {};
     }
 };
 
-const editProduct = (editProduct) => {
-    product.value = { ...editProduct };
-    console.log(product);
-    productDialog.value = true;
+const editAudience = (editAudience) => {
+    audience.value = { ...editAudience };
+    console.log(audience);
+    audienceDialog.value = true;
 };
 
-const confirmDeleteProduct = (editProduct) => {
-    product.value = editProduct;
-    deleteProductDialog.value = true;
+const confirmDeleteAudience = (editAudience) => {
+    audience.value = editAudience;
+    deleteAudienceDialog.value = true;
 };
 
-const deleteProduct = () => {
-    products.value = products.value.filter((val) => val.id !== product.value.id);
-    deleteProductDialog.value = false;
+const deleteAudience = () => {
+    audiences.value = audiences.value.filter((val) => val.id !== audience.value.id);
+    deleteAudienceDialog.value = false;
     product.value = {};
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Deleted', life: 3000 });
 };
 
 const findIndexById = (id) => {
     let index = -1;
-    for (let i = 0; i < products.value.length; i++) {
-        if (products.value[i].id === id) {
+    for (let i = 0; i < audiences.value.length; i++) {
+        if (audiences.value[i].id === id) {
             index = i;
             break;
         }
@@ -107,20 +118,30 @@ const exportCSV = () => {
 };
 
 const confirmDeleteSelected = () => {
-    deleteProductsDialog.value = true;
+    deleteAudiencesDialog.value = true;
 };
-const deleteSelectedProducts = () => {
-    products.value = products.value.filter((val) => !selectedProducts.value.includes(val));
-    deleteProductsDialog.value = false;
-    selectedProducts.value = null;
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
+const deleteSelectedAudiences = () => {
+    audiences.value = audiences.value.filter((val) => !selectedAudiences.value.includes(val));
+    deleteAudiencesDialog.value = false;
+    selectedAudiences.value = null;
+    toast.add({ severity: 'success', summary: 'Successful', detail: 'Audiences Deleted', life: 3000 });
 };
 
 const initFilters = () => {
     filters.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        // firstname: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        // lastname: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        // email: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        // phone: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        // category: { value: null, matchMode: FilterMatchMode.CONTAINS }
     };
 };
+
+//Computed property to check if email is valid
+const isValidEmail = computed(() => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(audience.value.email);
+});
 </script>
 
 <template>
@@ -133,7 +154,7 @@ const initFilters = () => {
                         <div class="my-2">
                             <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
                             <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected"
-                                :disabled="!selectedProducts || !selectedProducts.length" />
+                                :disabled="!selectedAudiences || !selectedAudiences.length" />
                         </div>
                     </template>
 
@@ -144,12 +165,12 @@ const initFilters = () => {
                     </template>
                 </Toolbar>
 
-                <DataTable ref="dt" :value="products" v-model:selection="selectedProducts" dataKey="id" :paginator="true"
+                <DataTable ref="dt" :value="audiences" v-model:selection="selectedAudiences" dataKey="id" :paginator="true"
                     :rows="10" :filters="filters"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[5, 10, 25]"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-                    responsiveLayout="scroll">
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} audiences"
+                    :globalFilterFields="['firstname', 'lastname', 'email', 'phone', 'category']" responsiveLayout="scroll">
                     <template #header>
                         <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
                             <h5 class="m-0">Manage Audience</h5>
@@ -167,16 +188,25 @@ const initFilters = () => {
                             {{ slotProps.data.code }}
                         </template>
                     </Column> -->
-                    <Column field="name" header="Name" :sortable="true" headerStyle="width:20%; min-width:10rem;">
+                    <Column field="name" header="FirstName" :sortable="true" headerStyle="width:20%; min-width:10rem;"
+                        :filter="true">
                         <template #body="slotProps">
-                            <span class="p-column-title">Name</span>
-                            {{ slotProps.data.name }}
+                            <span class="p-column-title">FirstName</span>
+                            {{ slotProps.data.firstname }}
                         </template>
                     </Column>
-                    <Column field="price" header="Email" :sortable="true" headerStyle="width:20%; min-width:8rem;">
+                    <Column field="name" header="LastName" :sortable="true" headerStyle="width:20%; min-width:10rem;"
+                        :filter="true">
+                        <template #body="slotProps">
+                            <span class="p-column-title">LastName</span>
+                            {{ slotProps.data.lastname }}
+                        </template>
+                    </Column>
+                    <Column field="price" header="Email" :sortable="true" headerStyle="width:20%; min-width:8rem;"
+                        :filter="true">
                         <template #body="slotProps">
                             <span class="p-column-title">Email</span>
-                            {{ slotProps.data.price }}
+                            {{ slotProps.data.email }}
                         </template>
                     </Column>
                     <!-- <Column header="Image" headerStyle="width:14%; min-width:10rem;">
@@ -186,13 +216,15 @@ const initFilters = () => {
                                 class="shadow-2" width="100" />
                         </template>
                     </Column> -->
-                    <Column field="price" header="Phone" :sortable="true" headerStyle="width:20%; min-width:8rem;">
+                    <Column field="price" header="Phone" :sortable="true" headerStyle="width:20%; min-width:8rem;"
+                        :filter="true">
                         <template #body="slotProps">
                             <span class="p-column-title">Phone</span>
-                            {{ formatCurrency(slotProps.data.price) }}
+                            {{ slotProps.data.phone }}
                         </template>
                     </Column>
-                    <Column field="category" header="Category" :sortable="true" headerStyle="width:20%; min-width:10rem;">
+                    <Column field="category" header="Category" :sortable="true" headerStyle="width:20%; min-width:10rem;"
+                        :filter="true">
                         <template #body="slotProps">
                             <span class="p-column-title">Category</span>
                             {{ slotProps.data.category }}
@@ -216,29 +248,45 @@ const initFilters = () => {
                     <Column headerStyle="min-width:10rem;">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
-                                @click="editProduct(slotProps.data)" />
+                                @click="editAudience(slotProps.data)" />
                             <Button icon="pi pi-trash" class="p-button-rounded p-button-warning mt-2"
-                                @click="confirmDeleteProduct(slotProps.data)" />
+                                @click="confirmDeleteAudience(slotProps.data)" />
                         </template>
                     </Column>
                 </DataTable>
 
-                <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true"
+                <Dialog v-model:visible="audienceDialog" :style="{ width: '450px' }" header="Audience Details" :modal="true"
                     class="p-fluid">
                     <img :src="'demo/images/product/' + product.image" :alt="product.image" v-if="product.image" width="150"
                         class="mt-0 mx-auto mb-5 block shadow-2" />
                     <div class="field">
-                        <label for="name">Name</label>
-                        <InputText id="name" v-model.trim="product.name" required="true" autofocus
-                            :class="{ 'p-invalid': submitted && !product.name }" />
-                        <small class="p-invalid" v-if="submitted && !product.name">Name is required.</small>
+                        <label for="name">Firstname</label>
+                        <InputText id="name" v-model.trim="audience.firstname" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !audience.firstname }" />
+                        <small class="p-invalid" v-if="submitted && !audience.firstname">First name is required.</small>
                     </div>
                     <div class="field">
-                        <label for="description">Description</label>
-                        <Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" />
+                        <label for="name">Lastname</label>
+                        <InputText id="name" v-model.trim="audience.lastname" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !audience.lastname }" />
+                        <small class="p-invalid" v-if="submitted && !audience.lastname">Last name is required.</small>
+                    </div>
+                    <div class="field">
+                        <label for="name">Email</label>
+                        <InputText id="name" v-model.trim="audience.email" required="true" autofocus type="email"
+                            :class="{ 'p-invalid': submitted && audience.email && !isValidEmail }" />
+                        <!-- <small class="p-invalid" v-if="submitted && !audience.email">Email is required.</small> -->
+                        <small class="p-invalid" v-if="submitted && audience.email && !isValidEmail">Email is not
+                            valid.</small>
+                    </div>
+                    <div class="field">
+                        <label for="name">Phone</label>
+                        <InputText id="name" v-model.trim="audience.phone" required="true" autofocus
+                            :class="{ 'p-invalid': submitted && !audience.phone }" />
+                        <small class="p-invalid" v-if="submitted && !audience.phone">Phone number is required.</small>
                     </div>
 
-                    <div class="field">
+                    <!-- <div class="field">
                         <label for="inventoryStatus" class="mb-3">Inventory Status</label>
                         <Dropdown id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses"
                             optionLabel="label" placeholder="Select a Status">
@@ -256,33 +304,31 @@ const initFilters = () => {
                                 </span>
                             </template>
                         </Dropdown>
-                    </div>
+                    </div> -->
 
                     <div class="field">
                         <label class="mb-3">Category</label>
                         <div class="formgrid grid">
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category1" name="category" value="Accessories"
-                                    v-model="product.category" />
-                                <label for="category1">Accessories</label>
+                                <RadioButton id="category1" name="category" value="regular" v-model="audience.category" />
+                                <label for="category1">Regular</label>
                             </div>
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category2" name="category" value="Clothing" v-model="product.category" />
-                                <label for="category2">Clothing</label>
+                                <RadioButton id="category2" name="category" value="vip" v-model="audience.category" />
+                                <label for="category2">VIP</label>
                             </div>
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category3" name="category" value="Electronics"
-                                    v-model="product.category" />
-                                <label for="category3">Electronics</label>
+                                <RadioButton id="category3" name="category" value="vvip" v-model="audience.category" />
+                                <label for="category3">VVIP</label>
                             </div>
-                            <div class="field-radiobutton col-6">
-                                <RadioButton id="category4" name="category" value="Fitness" v-model="product.category" />
+                            <!-- <div class="field-radiobutton col-6">
+                                <RadioButton id="category4" name="category" value="Fitness" v-model="audience.category" />
                                 <label for="category4">Fitness</label>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
 
-                    <div class="formgrid grid">
+                    <!-- <div class="formgrid grid">
                         <div class="field col">
                             <label for="price">Price</label>
                             <InputNumber id="price" v-model="product.price" mode="currency" currency="USD" locale="en-US"
@@ -293,32 +339,33 @@ const initFilters = () => {
                             <label for="quantity">Quantity</label>
                             <InputNumber id="quantity" v-model="product.quantity" integeronly />
                         </div>
-                    </div>
+                    </div> -->
                     <template #footer>
                         <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
                         <Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveProduct" />
                     </template>
                 </Dialog>
 
-                <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                <Dialog v-model:visible="deleteAudienceDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
                     <div class="flex align-items-center justify-content-center">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span v-if="product">Are you sure you want to delete <b>{{ product.name }}</b>?</span>
+                        <span v-if="audience">Are you sure you want to delete <b>{{ audience.firstname }}</b>?</span>
                     </div>
                     <template #footer>
-                        <Button label="No" icon="pi pi-times" class="p-button-text" @click="deleteProductDialog = false" />
-                        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteProduct" />
+                        <Button label="No" icon="pi pi-times" class="p-button-text" @click="deleteAudienceDialog = false" />
+                        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteAudience" />
                     </template>
                 </Dialog>
 
-                <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                <Dialog v-model:visible="deleteAudiencesDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
                     <div class="flex align-items-center justify-content-center">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-                        <span v-if="product">Are you sure you want to delete the selected products?</span>
+                        <span v-if="product">Are you sure you want to delete the selected audiences?</span>
                     </div>
                     <template #footer>
-                        <Button label="No" icon="pi pi-times" class="p-button-text" @click="deleteProductsDialog = false" />
-                        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteSelectedProducts" />
+                        <Button label="No" icon="pi pi-times" class="p-button-text"
+                            @click="deleteAudiencesDialog = false" />
+                        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteSelectedAudiences" />
                     </template>
                 </Dialog>
             </div>
