@@ -5,6 +5,11 @@ import ProductService from '@/service/ProductService';
 import AudienceService from '@/service/AudienceService';
 import { useToast } from 'primevue/usetoast';
 
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+
+import { db } from '../../firebase/init.js';
+
+
 const toast = useToast();
 
 const products = ref(null);
@@ -55,20 +60,46 @@ const hideDialog = () => {
     submitted.value = false;
 };
 
-const saveProduct = () => {
+const saveAudience = () => {
     submitted.value = true;
-    if (product.value.name && product.value.name.trim() && product.value.price) {
-        if (product.value.id) {
-            product.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
-            products.value[findIndexById(product.value.id)] = product.value;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+    if (audience.value.firstname && audience.value.lastname.trim() && audience.value.phone) {
+        if (audience.value.id) {
+            //audience.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
+            audiences.value[findIndexById(audience.value.id)] = audience.value;
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
         } else {
-            product.value.id = createId();
-            product.value.code = createId();
-            product.value.image = 'product-placeholder.svg';
-            product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
-            products.value.push(product.value);
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+            audience.value.id = createId();
+            // audience.value.firstname
+            // product.value.image = 'product-placeholder.svg';
+            // product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
+            audience.events_attended = ['hod'];
+
+            audience.registered_on = serverTimestamp(),
+                audience.registered_by = 'admin1',
+                audiences.value.push(audience.value);
+
+
+            const docData = {
+                firstname: audience.value.firstname,
+                lastname: audience.value.lastname,
+                email: audience.value.email,
+                phone: audience.value.phone,
+                category: audience.value.category,
+                //Events attended- an array of event ids
+                events_attended: ['hod'],
+                registered_on: serverTimestamp(),
+                registered_by: 'admin1'
+            };
+
+            //Add a new document to audiences collection
+            setDoc(doc(db, "audiences", audience.value.id), docData).then(() => {
+                console.log("Document successfully written!");
+                audiences.value.push(audience.value);
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Created', life: 3000 });
+            }).catch((error) => {
+                console.error("Error writing document: ", error);
+            });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Created', life: 3000 });
         }
         audienceDialog.value = false;
         audience.value = {};
@@ -159,8 +190,8 @@ const isValidEmail = computed(() => {
                     </template>
 
                     <template v-slot:end>
-                        <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import"
-                            class="mr-2 inline-block" />
+                        <!-- <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import"
+                            class="mr-2 inline-block" /> -->
                         <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportCSV($event)" />
                     </template>
                 </Toolbar>
@@ -342,7 +373,7 @@ const isValidEmail = computed(() => {
                     </div> -->
                     <template #footer>
                         <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
-                        <Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveProduct" />
+                        <Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveAudience" />
                     </template>
                 </Dialog>
 

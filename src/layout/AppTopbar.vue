@@ -17,8 +17,11 @@ onBeforeUnmount(() => {
     unbindOutsideClickListener();
 });
 
+// const logoUrl = computed(() => {
+//     return `layout/images/${layoutConfig.darkTheme.value ? 'mainlogo' : 'mianlogo'}.PNG`;
+// });
 const logoUrl = computed(() => {
-    return `layout/images/${layoutConfig.darkTheme.value ? 'logo-white' : 'logo-dark'}.svg`;
+    return "layout/images/mainlogo.PNG";
 });
 
 const onTopBarMenuButton = () => {
@@ -84,10 +87,10 @@ const isOutsideClicked = (event) => {
                 <i class="pi pi-user"></i>
                 <span>Profile</span>
             </button>
-            <button @click="onSettingsClick()" class="p-link layout-topbar-button">
+            <!-- <button @click="onSettingsClick()" class="p-link layout-topbar-button">
                 <i class="pi pi-cog"></i>
                 <span>Settings</span>
-            </button>
+            </button> -->
         </div>
     </div>
 </template>
