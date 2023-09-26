@@ -5,7 +5,7 @@ import ProductService from '@/service/ProductService';
 import AudienceService from '@/service/AudienceService';
 import { useToast } from 'primevue/usetoast';
 
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 
 import { db } from '../../firebase/init.js';
 
@@ -27,7 +27,7 @@ const statuses = ref([
     { label: 'OUTOFSTOCK', value: 'outofstock' }
 ]);
 
-const audiences = ref(null);
+const audiences = ref([]);
 const audienceDialog = ref(false);
 const deleteAudienceDialog = ref(false);
 const deleteAudiencesDialog = ref(false);
@@ -38,12 +38,26 @@ const selectedAudiences = ref(null);
 const productService = new ProductService();
 const audienceService = new AudienceService();
 
+const fetchAudiences = async () => {
+    const querySnapshot = await getDocs(collection(db, "audiences"));
+    querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        console.log(doc.id, " => ", doc.data());
+        //Add the document id to the data object
+        doc.data().id = doc.id;
+
+        audiences.value.push(doc.data());
+    });
+};
+
 onBeforeMount(() => {
     initFilters();
 });
 onMounted(() => {
     // productService.getProducts().then((data) => (products.value = data));
-    audienceService.getAudience().then((data) => (audiences.value = data));
+    //audienceService.getAudience().then((data) => (audiences.value = data));
+    fetchAudiences();
+
 });
 const formatCurrency = (value) => {
     return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -60,13 +74,24 @@ const hideDialog = () => {
     submitted.value = false;
 };
 
-const saveAudience = () => {
+const saveAudience = async () => {
     submitted.value = true;
-    if (audience.value.firstname && audience.value.lastname.trim() && audience.value.phone) {
+    if (audience.value.firstname && audience.value.lastname.trim() && audience.value.phone && audience.value.email && isValidEmail.value) {
         if (audience.value.id) {
             //audience.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
             audiences.value[findIndexById(audience.value.id)] = audience.value;
+            //Update the document in the audiences collection
+            await updateDoc(doc(db, "audiences", audience.value.id),
+                audience.value
+            ).then(() => {
+                console.log("Document successfully updated!");
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
+            }).catch((error) => {
+                // The document probably doesn't exist.
+                console.error("Error updating document: ", error);
+            });
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
+
         } else {
             audience.value.id = createId();
             // audience.value.firstname
@@ -74,12 +99,13 @@ const saveAudience = () => {
             // product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
             audience.events_attended = ['hod'];
 
-            audience.registered_on = serverTimestamp(),
-                audience.registered_by = 'admin1',
-                audiences.value.push(audience.value);
+            audience.registered_on = serverTimestamp();
+            audience.registered_by = 'admin1';
+            //audiences.value.push(audience.value);
 
 
             const docData = {
+                id: audience.value.id,
                 firstname: audience.value.firstname,
                 lastname: audience.value.lastname,
                 email: audience.value.email,
@@ -92,7 +118,7 @@ const saveAudience = () => {
             };
 
             //Add a new document to audiences collection
-            setDoc(doc(db, "audiences", audience.value.id), docData).then(() => {
+            await setDoc(doc(db, "audiences", audience.value.id), docData).then(() => {
                 console.log("Document successfully written!");
                 audiences.value.push(audience.value);
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Created', life: 3000 });
@@ -106,7 +132,7 @@ const saveAudience = () => {
     }
 };
 
-const editAudience = (editAudience) => {
+const editAudience = async (editAudience) => {
     audience.value = { ...editAudience };
     console.log(audience);
     audienceDialog.value = true;
@@ -114,14 +140,24 @@ const editAudience = (editAudience) => {
 
 const confirmDeleteAudience = (editAudience) => {
     audience.value = editAudience;
+
     deleteAudienceDialog.value = true;
 };
 
-const deleteAudience = () => {
+const deleteAudience = async () => {
     audiences.value = audiences.value.filter((val) => val.id !== audience.value.id);
+    await deleteDoc(doc(db, audience.value, audience.value.id));
+    //     .then(() => {
+    //         console.log("Document successfully deleted!");
+
+    //     }).catch((error) => {
+    //         console.error("Error removing document: ", error);
+    //     })
     deleteAudienceDialog.value = false;
-    product.value = {};
+    audience.value = {};
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Deleted', life: 3000 });
+
+
 };
 
 const findIndexById = (id) => {
