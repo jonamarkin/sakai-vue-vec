@@ -54,8 +54,7 @@ onBeforeMount(() => {
     initFilters();
 });
 onMounted(() => {
-    // productService.getProducts().then((data) => (products.value = data));
-    //audienceService.getAudience().then((data) => (audiences.value = data));
+
     fetchAudiences();
 
 });
@@ -78,9 +77,7 @@ const saveAudience = async () => {
     submitted.value = true;
     if (audience.value.firstname && audience.value.lastname.trim() && audience.value.phone && audience.value.email && isValidEmail.value) {
         if (audience.value.id) {
-            //audience.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
             audiences.value[findIndexById(audience.value.id)] = audience.value;
-            //Update the document in the audiences collection
             await updateDoc(doc(db, "audiences", audience.value.id),
                 audience.value
             ).then(() => {
@@ -94,14 +91,12 @@ const saveAudience = async () => {
 
         } else {
             audience.value.id = createId();
-            // audience.value.firstname
-            // product.value.image = 'product-placeholder.svg';
-            // product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
+
             audience.events_attended = ['hod'];
 
             audience.registered_on = serverTimestamp();
             audience.registered_by = 'admin1';
-            //audiences.value.push(audience.value);
+
 
 
             const docData = {
@@ -147,12 +142,7 @@ const confirmDeleteAudience = (editAudience) => {
 const deleteAudience = async () => {
     audiences.value = audiences.value.filter((val) => val.id !== audience.value.id);
     await deleteDoc(doc(db, audience.value, audience.value.id));
-    //     .then(() => {
-    //         console.log("Document successfully deleted!");
 
-    //     }).catch((error) => {
-    //         console.error("Error removing document: ", error);
-    //     })
     deleteAudienceDialog.value = false;
     audience.value = {};
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Deleted', life: 3000 });
@@ -197,11 +187,7 @@ const deleteSelectedAudiences = () => {
 const initFilters = () => {
     filters.value = {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        // firstname: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        // lastname: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        // email: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        // phone: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        // category: { value: null, matchMode: FilterMatchMode.CONTAINS }
+
     };
 };
 
@@ -209,6 +195,67 @@ const initFilters = () => {
 const isValidEmail = computed(() => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(audience.value.email);
 });
+
+
+const categoryClass = (category) => {
+    if (category == 'regular') return 'pill regular';
+    else if (category == 'special') return 'pill special';
+    else return 'pill patron';
+};
+
+const categoryLabel = (category) => {
+    if (category == 'regular') return 'Regular';
+    else if (category == 'special') return 'Special Guest';
+    else return 'Patron';
+};
+
+//Registering user
+const toggleRegistration = (data) => {
+    if (data.registered) {
+        registerUser(data);
+
+    } else {
+        deregisterUser(data);
+    }
+}
+
+const registerUser = (data) => {
+    if (data.events_attended.includes('hod')) {
+        toast.add({ severity: 'info', summary: 'Already Registered', detail: `${data.firstname} is already registered`, life: 3000 });
+        return;
+    } else {
+        data.events_attended.push('hod');
+        updateDoc(doc(db, "audiences", data.id),
+            data
+        ).then(() => {
+            console.log("Document successfully updated!");
+            toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
+        }).catch((error) => {
+            // The document probably doesn't exist.
+            console.error("Error updating document: ", error);
+        });
+    }
+}
+
+const deregisterUser = (data) => {
+    if (!data.events_attended.includes('hod')) {
+        toast.add({ severity: 'info', summary: 'Already Unregistered', detail: `${data.firstname} is already unregistered`, life: 3000 });
+        return;
+    } else {
+        data.events_attended = data.events_attended.filter((val) => val !== 'hod');
+        updateDoc(doc(db, "audiences", data.id),
+            data
+        ).then(() => {
+            console.log("Document successfully updated!");
+            toast.add({ severity: 'info', summary: 'Unregistered', detail: `${data.firstname} unregistered successfully`, life: 3000 });
+        }).catch((error) => {
+            // The document probably doesn't exist.
+            console.error("Error updating document: ", error);
+        });
+    }
+}
+
+
 </script>
 
 <template>
@@ -232,8 +279,7 @@ const isValidEmail = computed(() => {
                     </template>
                 </Toolbar>
 
-                <DataTable ref="dt" :value="audiences" v-model:selection="selectedAudiences" dataKey="id" :paginator="true"
-                    :rows="10" :filters="filters"
+                <DataTable ref="dt" :value="audiences" dataKey="id" :paginator="true" :rows="10" :filters="filters"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[5, 10, 25]"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} audiences"
@@ -248,13 +294,21 @@ const isValidEmail = computed(() => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-                    <!-- <Column field="code" header="Code" :sortable="true" headerStyle="width:14%; min-width:10rem;">
+                    <!-- <Column headerStyle="width: 3rem;">
                         <template #body="slotProps">
-                            <span class="p-column-title">Code</span>
-                            {{ slotProps.data.code }}
+                            <ToggleButton :onLabel="'Registered'" :offLabel="'Unregistered'"
+                                v-model="slotProps.data.registered" :change="() => toggleRegistration(slotProps.data)" />
                         </template>
                     </Column> -->
+
+                    <Column headerStyle="width: 3rem;">
+                        <template #body="slotProps">
+                            <InputSwitch v-model="slotProps.data.registered" @change="toggleRegistration(slotProps.data)" />
+                        </template>
+                    </Column>
+
+                    <!-- <Column selectionMode="multiple" headerStyle="width: 3rem"></Column> -->
+
                     <Column field="name" header="FirstName" :sortable="true" headerStyle="width:20%; min-width:10rem;"
                         :filter="true">
                         <template #body="slotProps">
@@ -276,13 +330,7 @@ const isValidEmail = computed(() => {
                             {{ slotProps.data.email }}
                         </template>
                     </Column>
-                    <!-- <Column header="Image" headerStyle="width:14%; min-width:10rem;">
-                        <template #body="slotProps">
-                            <span class="p-column-title">Image</span>
-                            <img :src="'demo/images/product/' + slotProps.data.image" :alt="slotProps.data.image"
-                                class="shadow-2" width="100" />
-                        </template>
-                    </Column> -->
+
                     <Column field="price" header="Phone" :sortable="true" headerStyle="width:20%; min-width:8rem;"
                         :filter="true">
                         <template #body="slotProps">
@@ -290,28 +338,17 @@ const isValidEmail = computed(() => {
                             {{ slotProps.data.phone }}
                         </template>
                     </Column>
+
                     <Column field="category" header="Category" :sortable="true" headerStyle="width:20%; min-width:10rem;"
                         :filter="true">
                         <template #body="slotProps">
-                            <span class="p-column-title">Category</span>
-                            {{ slotProps.data.category }}
+                            <span :class="categoryClass(slotProps.data.category)">
+                                {{ categoryLabel(slotProps.data.category) }}
+                            </span>
                         </template>
                     </Column>
-                    <!-- <Column field="rating" header="Reviews" :sortable="true" headerStyle="width:14%; min-width:10rem;">
-                        <template #body="slotProps">
-                            <span class="p-column-title">Rating</span>
-                            <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
-                        </template>
-                    </Column> -->
-                    <!-- <Column field="inventoryStatus" header="Status" :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;">
-                        <template #body="slotProps">
-                            <span class="p-column-title">Status</span>
-                            <span
-                                :class="'product-badge status-' + (slotProps.data.inventoryStatus ? slotProps.data.inventoryStatus.toLowerCase() : '')">{{
-                                    slotProps.data.inventoryStatus }}</span>
-                        </template>
-                    </Column> -->
+
+
                     <Column headerStyle="min-width:10rem;">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
@@ -353,25 +390,7 @@ const isValidEmail = computed(() => {
                         <small class="p-invalid" v-if="submitted && !audience.phone">Phone number is required.</small>
                     </div>
 
-                    <!-- <div class="field">
-                        <label for="inventoryStatus" class="mb-3">Inventory Status</label>
-                        <Dropdown id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses"
-                            optionLabel="label" placeholder="Select a Status">
-                            <template #value="slotProps">
-                                <div v-if="slotProps.value && slotProps.value.value">
-                                    <span :class="'product-badge status-' + slotProps.value.value">{{ slotProps.value.label
-                                    }}</span>
-                                </div>
-                                <div v-else-if="slotProps.value && !slotProps.value.value">
-                                    <span :class="'product-badge status-' + slotProps.value.toLowerCase()">{{
-                                        slotProps.value }}</span>
-                                </div>
-                                <span v-else>
-                                    {{ slotProps.placeholder }}
-                                </span>
-                            </template>
-                        </Dropdown>
-                    </div> -->
+
 
                     <div class="field">
                         <label class="mb-3">Category</label>
@@ -381,32 +400,18 @@ const isValidEmail = computed(() => {
                                 <label for="category1">Regular</label>
                             </div>
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category2" name="category" value="vip" v-model="audience.category" />
-                                <label for="category2">VIP</label>
+                                <RadioButton id="category2" name="category" value="special" v-model="audience.category" />
+                                <label for="category2">Special Guest</label>
                             </div>
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category3" name="category" value="vvip" v-model="audience.category" />
-                                <label for="category3">VVIP</label>
+                                <RadioButton id="category3" name="category" value="patron" v-model="audience.category" />
+                                <label for="category3">Patron</label>
                             </div>
-                            <!-- <div class="field-radiobutton col-6">
-                                <RadioButton id="category4" name="category" value="Fitness" v-model="audience.category" />
-                                <label for="category4">Fitness</label>
-                            </div> -->
+
                         </div>
                     </div>
 
-                    <!-- <div class="formgrid grid">
-                        <div class="field col">
-                            <label for="price">Price</label>
-                            <InputNumber id="price" v-model="product.price" mode="currency" currency="USD" locale="en-US"
-                                :class="{ 'p-invalid': submitted && !product.price }" :required="true" />
-                            <small class="p-invalid" v-if="submitted && !product.price">Price is required.</small>
-                        </div>
-                        <div class="field col">
-                            <label for="quantity">Quantity</label>
-                            <InputNumber id="quantity" v-model="product.quantity" integeronly />
-                        </div>
-                    </div> -->
+
                     <template #footer>
                         <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
                         <Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveAudience" />
@@ -435,9 +440,35 @@ const isValidEmail = computed(() => {
                         <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteSelectedAudiences" />
                     </template>
                 </Dialog>
+
+
+
             </div>
         </div>
     </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.pill {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+}
+
+.pill.regular {
+    background-color: #3498db;
+    /* Example color for 'Regular' */
+}
+
+.pill.special {
+    background-color: #e74c3c;
+    /* Example color for 'Special Guest' */
+}
+
+.pill.patron {
+    background-color: #2ecc71;
+    /* Example color for 'Patron' */
+}
+</style>

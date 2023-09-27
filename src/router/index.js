@@ -142,6 +142,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/Audience.vue')
                 },
                 {
+                    path: '/pages/events',
+                    name: 'events',
+                    component: () => import('@/views/pages/Events.vue')
+                },
+                {
                     path: '/documentation',
                     name: 'documentation',
                     component: () => import('@/views/utilities/Documentation.vue')

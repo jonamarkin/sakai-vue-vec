@@ -84,6 +84,11 @@ const model = ref([
                 icon: 'pi pi-fw pi-users',
                 to: '/pages/audience'
             },
+            {
+                label: 'Events',
+                icon: 'pi pi-fw pi-users',
+                to: '/pages/events'
+            },
             // {
             //     label: 'Timeline',
             //     icon: 'pi pi-fw pi-calendar',
