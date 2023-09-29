@@ -42,13 +42,37 @@ const fetchAudiences = async () => {
     const querySnapshot = await getDocs(collection(db, "audiences"));
     querySnapshot.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
-        console.log(doc.id, " => ", doc.data());
+        //console.log(doc.id, " => ", doc.data());
         //Add the document id to the data object
         doc.data().id = doc.id;
+        //doc.data().registered = doc.data().events_attended.includes('hod');
 
-        audiences.value.push(doc.data());
+        // console.log(doc.data().registered);
+        // console.log(doc.data().events_attended);
+        const audienceData = doc.data();
+        audienceData.id = doc.id;
+
+        if (audienceData.events_attended.includes('hod')) {
+            //console.log('yes');
+            audienceData.registered = true;
+        } else {
+            //console.log('no');
+            audienceData.registered = false;
+        }
+
+
+
+        audiences.value.push(audienceData);
     });
 };
+
+// async fetchAudiences() {
+//     let response = await fetchYourAudiences();
+//     this.audiences = response.map(audience => {
+//         audience.registered = audience.events_attended.includes("hod");
+//         return audience;
+//     });
+// }
 
 onBeforeMount(() => {
     initFilters();
@@ -219,9 +243,26 @@ const toggleRegistration = (data) => {
     }
 }
 
+// toggleRegistration(data) {
+//     if (data.registered) {
+//         if (!data.events_attended.includes("hod")) {
+//             data.events_attended.push("hod");
+//         }
+//     } else {
+//         const index = data.events_attended.indexOf("hod");
+//         if (index > -1) {
+//             data.events_attended.splice(index, 1);
+//         }
+//     }
+
+//     // Any additional logic or API calls related to the toggling action can be done here.
+// }
+
 const registerUser = (data) => {
     if (data.events_attended.includes('hod')) {
         toast.add({ severity: 'info', summary: 'Already Registered', detail: `${data.firstname} is already registered`, life: 3000 });
+        //toggle the switch back to true
+        data.registered = false;
         return;
     } else {
         data.events_attended.push('hod');
@@ -229,9 +270,13 @@ const registerUser = (data) => {
             data
         ).then(() => {
             console.log("Document successfully updated!");
+            if (!data.events_attended.includes("hod")) {
+                data.events_attended.push("hod");
+            }
             toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
         }).catch((error) => {
             // The document probably doesn't exist.
+            data.registered = false;
             console.error("Error updating document: ", error);
         });
     }
@@ -240,6 +285,8 @@ const registerUser = (data) => {
 const deregisterUser = (data) => {
     if (!data.events_attended.includes('hod')) {
         toast.add({ severity: 'info', summary: 'Already Unregistered', detail: `${data.firstname} is already unregistered`, life: 3000 });
+        //toggle the switch back to true
+        data.registered = true;
         return;
     } else {
         data.events_attended = data.events_attended.filter((val) => val !== 'hod');
@@ -247,9 +294,14 @@ const deregisterUser = (data) => {
             data
         ).then(() => {
             console.log("Document successfully updated!");
+            const index = data.events_attended.indexOf("hod");
+            if (index > -1) {
+                data.events_attended.splice(index, 1);
+            }
             toast.add({ severity: 'info', summary: 'Unregistered', detail: `${data.firstname} unregistered successfully`, life: 3000 });
         }).catch((error) => {
             // The document probably doesn't exist.
+            data.registered = true;
             console.error("Error updating document: ", error);
         });
     }
@@ -294,20 +346,15 @@ const deregisterUser = (data) => {
                         </div>
                     </template>
 
-                    <!-- <Column headerStyle="width: 3rem;">
-                        <template #body="slotProps">
-                            <ToggleButton :onLabel="'Registered'" :offLabel="'Unregistered'"
-                                v-model="slotProps.data.registered" :change="() => toggleRegistration(slotProps.data)" />
-                        </template>
-                    </Column> -->
 
-                    <Column headerStyle="width: 3rem;">
+
+                    <Column headerStyle="width: 3rem;" header="Register">
                         <template #body="slotProps">
                             <InputSwitch v-model="slotProps.data.registered" @change="toggleRegistration(slotProps.data)" />
                         </template>
+
                     </Column>
 
-                    <!-- <Column selectionMode="multiple" headerStyle="width: 3rem"></Column> -->
 
                     <Column field="name" header="FirstName" :sortable="true" headerStyle="width:20%; min-width:10rem;"
                         :filter="true">
