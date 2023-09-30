@@ -27,6 +27,63 @@ const statuses = ref([
     { label: 'OUTOFSTOCK', value: 'outofstock' }
 ]);
 
+const aud = ref([
+    {
+        "id": "1",
+        "firstname": "Kojo",
+        "lastname": "Larbi",
+        "email": "john.doe@example.com",
+        "phone": "0592680355",
+        "events_attended": ["Event A", "Event B"],
+        "category": "regular",
+        "registered_on": "2023-09-20",
+        "registered_by": "admin1"
+    },
+    {
+        "id": "2",
+        "firstname": "Selorm",
+        "lastname": "Selawoka",
+        "email": "jane.smith@example.com",
+        "phone": "233209335976",
+        "events_attended": ["Event A", "Event C", "Event D"],
+        "category": "vip",
+        "registered_on": "2023-09-19",
+        "registered_by": "admin2"
+    },
+    {
+        "id": "3",
+        "firstname": "Sydney",
+        "lastname": "Odoi",
+        "email": "alice.johnson@example.com",
+        "phone": "0262666575",
+        "events_attended": ["Event B", "Event D"],
+        "category": "regular",
+        "registered_on": "2023-09-18",
+        "registered_by": "admin3"
+    },
+    {
+        "id": "4",
+        "firstname": "Clara",
+        "lastname": "Hackman-Afful",
+        "email": "bob.williams@example.com",
+        "phone": "233209335976",
+        "events_attended": ["Event A"],
+        "category": "vvip",
+        "registered_on": "2023-09-17",
+        "registered_by": "admin1"
+    },
+    {
+        "id": "5",
+        "firstname": "Esmond",
+        "lastname": "Luuse",
+        "email": "charlie.brown@example.com",
+        "phone": "0203436424",
+        "events_attended": ["Event C", "Event D"],
+        "category": "vip",
+        "registered_on": "2023-09-16",
+        "registered_by": "admin2"
+    },
+]);
 const audiences = ref([]);
 const audienceDialog = ref(false);
 const deleteAudienceDialog = ref(false);
@@ -38,41 +95,37 @@ const selectedAudiences = ref(null);
 const productService = new ProductService();
 const audienceService = new AudienceService();
 
-const fetchAudiences = async () => {
-    const querySnapshot = await getDocs(collection(db, "audiences"));
-    querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        //console.log(doc.id, " => ", doc.data());
-        //Add the document id to the data object
-        doc.data().id = doc.id;
-        //doc.data().registered = doc.data().events_attended.includes('hod');
+// const fetchAudiences = async () => {
+//     const querySnapshot = await getDocs(collection(db, "audiences"));
+//     querySnapshot.forEach((doc) => {
+//         // doc.data() is never undefined for query doc snapshots
+//         //console.log(doc.id, " => ", doc.data());
+//         //Add the document id to the data object
+//         doc.data().id = doc.id;
+//         //doc.data().registered = doc.data().events_attended.includes('hod');
 
-        // console.log(doc.data().registered);
-        // console.log(doc.data().events_attended);
-        const audienceData = doc.data();
-        audienceData.id = doc.id;
+//         // console.log(doc.data().registered);
+//         // console.log(doc.data().events_attended);
+//         const audienceData = doc.data();
+//         audienceData.id = doc.id;
 
-        if (audienceData.events_attended.includes('hod')) {
-            //console.log('yes');
-            audienceData.registered = true;
-        } else {
-            //console.log('no');
-            audienceData.registered = false;
-        }
+//         if (audienceData.events_attended.includes('hod')) {
+//             //console.log('yes');
+//             audienceData.registered = true;
+//         } else {
+//             //console.log('no');
+//             audienceData.registered = false;
+//         }
 
 
 
-        audiences.value.push(audienceData);
-    });
-};
-
-// async fetchAudiences() {
-//     let response = await fetchYourAudiences();
-//     this.audiences = response.map(audience => {
-//         audience.registered = audience.events_attended.includes("hod");
-//         return audience;
+//         audiences.value.push(audienceData);
 //     });
-// }
+// };
+
+const fetchAudiences = async () => {
+    audiences.value = aud.value;
+}
 
 onBeforeMount(() => {
     initFilters();
@@ -266,20 +319,53 @@ const registerUser = (data) => {
         return;
     } else {
         data.events_attended.push('hod');
-        updateDoc(doc(db, "audiences", data.id),
-            data
-        ).then(() => {
-            console.log("Document successfully updated!");
-            if (!data.events_attended.includes("hod")) {
-                data.events_attended.push("hod");
-            }
-            toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
-        }).catch((error) => {
-            // The document probably doesn't exist.
-            data.registered = false;
-            console.error("Error updating document: ", error);
-        });
+        // updateDoc(doc(db, "audiences", data.id),
+        //     data
+        // ).then(() => {
+        //     console.log("Document successfully updated!");
+        //     if (!data.events_attended.includes("hod")) {
+        //         data.events_attended.push("hod");
+        //     }
+        //     toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
+
+        //     //Send sms to the user
+        //     sendSMS(data);
+        // }).catch((error) => {
+        //     // The document probably doesn't exist.
+        //     data.registered = false;
+        //     console.error("Error updating document: ", error);
+        // });
+
+        sendSMS(data);
     }
+}
+
+const sendSMS = (data) => {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", "Basic aG9wdWN4eXg6cnpxZXB4dWk=");
+
+    var raw = JSON.stringify({
+        "From": "VEC@10",
+        "To": "233542519396",
+        "Content": `Hello ${data.firstname}, welcome to Harmony of A Decade. This is a test message.`
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    fetch("https://sms.hubtel.com/v1/messages/send", requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .then(() => {
+            console.log("SMS sent successfully!");
+            toast.add({ severity: 'success', summary: 'SMS Sent', detail: `SMS sent to ${data.firstname}`, life: 3000 });
+        })
+        .catch(error => console.log('error', error));
 }
 
 const deregisterUser = (data) => {
