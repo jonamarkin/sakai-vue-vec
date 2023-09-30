@@ -63,10 +63,10 @@ const aud = ref([
     },
     {
         "id": "4",
-        "firstname": "Clara",
-        "lastname": "Hackman-Afful",
+        "firstname": "Moses",
+        "lastname": "Ogyadu",
         "email": "bob.williams@example.com",
-        "phone": "233209335976",
+        "phone": "233269751985",
         "events_attended": ["Event A"],
         "category": "vvip",
         "registered_on": "2023-09-17",
@@ -343,12 +343,9 @@ const registerUser = (data) => {
 const sendSMS = (data) => {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "Basic aG9wdWN4eXg6cnpxZXB4dWk=");
 
     var raw = JSON.stringify({
-        "From": "VEC@10",
-        "To": "233542519396",
-        "Content": `Hello ${data.firstname}, welcome to Harmony of A Decade. This is a test message.`
+        ...data,
     });
 
     var requestOptions = {
@@ -358,11 +355,10 @@ const sendSMS = (data) => {
         redirect: 'follow'
     };
 
-    fetch("https://sms.hubtel.com/v1/messages/send", requestOptions)
+    fetch("https://vecbackend-production.up.railway.app/sms", requestOptions)
         .then(response => response.text())
         .then(result => console.log(result))
         .then(() => {
-            console.log("SMS sent successfully!");
             toast.add({ severity: 'success', summary: 'SMS Sent', detail: `SMS sent to ${data.firstname}`, life: 3000 });
         })
         .catch(error => console.log('error', error));
