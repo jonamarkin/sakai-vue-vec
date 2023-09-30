@@ -95,37 +95,42 @@ const selectedAudiences = ref(null);
 const productService = new ProductService();
 const audienceService = new AudienceService();
 
-// const fetchAudiences = async () => {
-//     const querySnapshot = await getDocs(collection(db, "audiences"));
-//     querySnapshot.forEach((doc) => {
-//         // doc.data() is never undefined for query doc snapshots
-//         //console.log(doc.id, " => ", doc.data());
-//         //Add the document id to the data object
-//         doc.data().id = doc.id;
-//         //doc.data().registered = doc.data().events_attended.includes('hod');
 
-//         // console.log(doc.data().registered);
-//         // console.log(doc.data().events_attended);
-//         const audienceData = doc.data();
-//         audienceData.id = doc.id;
-
-//         if (audienceData.events_attended.includes('hod')) {
-//             //console.log('yes');
-//             audienceData.registered = true;
-//         } else {
-//             //console.log('no');
-//             audienceData.registered = false;
-//         }
-
-
-
-//         audiences.value.push(audienceData);
-//     });
-// };
+//let collectionName = 'audiences';
+let collectionName = 'uat_audiences';
 
 const fetchAudiences = async () => {
-    audiences.value = aud.value;
-}
+    const querySnapshot = await getDocs(collection(db, collectionName));
+    querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        //console.log(doc.id, " => ", doc.data());
+        //Add the document id to the data object
+        doc.data().id = doc.id;
+        //doc.data().registered = doc.data().events_attended.includes('hod');
+
+        // console.log(doc.data().registered);
+        // console.log(doc.data().events_attended);
+        const audienceData = doc.data();
+        audienceData.id = doc.id;
+
+        if (audienceData.events_attended.includes('hod')) {
+            //console.log('yes');
+            audienceData.registered = true;
+        } else {
+            //console.log('no');
+            audienceData.registered = false;
+        }
+
+
+
+        audiences.value.push(audienceData);
+    });
+};
+
+
+// const fetchAudiences = async () => {
+//     audiences.value = aud.value;
+// }
 
 onBeforeMount(() => {
     initFilters();
@@ -152,19 +157,23 @@ const hideDialog = () => {
 
 const saveAudience = async () => {
     submitted.value = true;
-    if (audience.value.firstname && audience.value.lastname.trim() && audience.value.phone && audience.value.email && isValidEmail.value) {
+    if (audience.value.firstname && audience.value.lastname.trim() && audience.value.phone) {
         if (audience.value.id) {
             audiences.value[findIndexById(audience.value.id)] = audience.value;
-            await updateDoc(doc(db, "audiences", audience.value.id),
+            await updateDoc(doc(db, collectionName, audience.value.id),
                 audience.value
             ).then(() => {
                 console.log("Document successfully updated!");
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
+                //Send sms to the user
+                sendSMS(audience.value);
+                fetchAudiences();
+
             }).catch((error) => {
                 // The document probably doesn't exist.
                 console.error("Error updating document: ", error);
             });
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
+            //toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
 
         } else {
             audience.value.id = createId();
@@ -180,7 +189,7 @@ const saveAudience = async () => {
                 id: audience.value.id,
                 firstname: audience.value.firstname,
                 lastname: audience.value.lastname,
-                email: audience.value.email,
+                email: audience.value.email ? audience.value.email : '',
                 phone: audience.value.phone,
                 category: audience.value.category,
                 //Events attended- an array of event ids
@@ -190,10 +199,14 @@ const saveAudience = async () => {
             };
 
             //Add a new document to audiences collection
-            await setDoc(doc(db, "audiences", audience.value.id), docData).then(() => {
+            await setDoc(doc(db, collectionName, audience.value.id), docData).then(() => {
                 console.log("Document successfully written!");
                 audiences.value.push(audience.value);
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Created', life: 3000 });
+                sendSMS(audience.value);
+                fetchAudiences();
+
+
             }).catch((error) => {
                 console.error("Error writing document: ", error);
             });
@@ -319,24 +332,28 @@ const registerUser = (data) => {
         return;
     } else {
         data.events_attended.push('hod');
-        // updateDoc(doc(db, "audiences", data.id),
-        //     data
-        // ).then(() => {
-        //     console.log("Document successfully updated!");
-        //     if (!data.events_attended.includes("hod")) {
-        //         data.events_attended.push("hod");
-        //     }
-        //     toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
+        updateDoc(doc(db, collectionName, data.id),
+            data
+        ).then(() => {
+            console.log("Document successfully updated!");
+            if (!data.events_attended.includes("hod")) {
+                data.events_attended.push("hod");
+            }
+            toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
 
-        //     //Send sms to the user
-        //     sendSMS(data);
-        // }).catch((error) => {
-        //     // The document probably doesn't exist.
-        //     data.registered = false;
-        //     console.error("Error updating document: ", error);
-        // });
+            //Send sms to the user
+            sendSMS(data);
 
-        sendSMS(data);
+            //Fetch updated audiences
+            fetchAudiences();
+
+        }).catch((error) => {
+            // The document probably doesn't exist.
+            data.registered = false;
+            console.error("Error updating document: ", error);
+        });
+
+        //sendSMS(data);
     }
 }
 
@@ -372,7 +389,7 @@ const deregisterUser = (data) => {
         return;
     } else {
         data.events_attended = data.events_attended.filter((val) => val !== 'hod');
-        updateDoc(doc(db, "audiences", data.id),
+        updateDoc(doc(db, collectionName, data.id),
             data
         ).then(() => {
             console.log("Document successfully updated!");
