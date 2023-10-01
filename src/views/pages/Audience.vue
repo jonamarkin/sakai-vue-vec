@@ -96,11 +96,12 @@ const productService = new ProductService();
 const audienceService = new AudienceService();
 
 
-//let collectionName = 'audiences';
-let collectionName = 'uat_audiences';
+let collectionName = 'audiences';
+//let collectionName = 'uat_audiences';
 
 const fetchAudiences = async () => {
     const querySnapshot = await getDocs(collection(db, collectionName));
+    let audiencesDatas = [];
     querySnapshot.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
         //console.log(doc.id, " => ", doc.data());
@@ -123,8 +124,10 @@ const fetchAudiences = async () => {
 
 
 
-        audiences.value.push(audienceData);
+        audiencesDatas.push(audienceData);
     });
+
+    audiences.value = audiencesDatas;
 };
 
 
@@ -295,7 +298,7 @@ const categoryClass = (category) => {
 
 const categoryLabel = (category) => {
     if (category == 'regular') return 'Regular';
-    else if (category == 'special') return 'Special Guest';
+    else if (category == 'special') return 'Special';
     else return 'Patron';
 };
 
@@ -454,38 +457,7 @@ const deregisterUser = (data) => {
 
                     </Column>
 
-
-                    <Column field="name" header="FirstName" :sortable="true" headerStyle="width:20%; min-width:10rem;"
-                        :filter="true">
-                        <template #body="slotProps">
-                            <span class="p-column-title">FirstName</span>
-                            {{ slotProps.data.firstname }}
-                        </template>
-                    </Column>
-                    <Column field="name" header="LastName" :sortable="true" headerStyle="width:20%; min-width:10rem;"
-                        :filter="true">
-                        <template #body="slotProps">
-                            <span class="p-column-title">LastName</span>
-                            {{ slotProps.data.lastname }}
-                        </template>
-                    </Column>
-                    <Column field="price" header="Email" :sortable="true" headerStyle="width:20%; min-width:8rem;"
-                        :filter="true">
-                        <template #body="slotProps">
-                            <span class="p-column-title">Email</span>
-                            {{ slotProps.data.email }}
-                        </template>
-                    </Column>
-
-                    <Column field="price" header="Phone" :sortable="true" headerStyle="width:20%; min-width:8rem;"
-                        :filter="true">
-                        <template #body="slotProps">
-                            <span class="p-column-title">Phone</span>
-                            {{ slotProps.data.phone }}
-                        </template>
-                    </Column>
-
-                    <Column field="category" header="Category" :sortable="true" headerStyle="width:20%; min-width:10rem;"
+                    <Column field="category" header="Category" :sortable="true" headerStyle="width:5%; min-width:5px;"
                         :filter="true">
                         <template #body="slotProps">
                             <span :class="categoryClass(slotProps.data.category)">
@@ -493,6 +465,44 @@ const deregisterUser = (data) => {
                             </span>
                         </template>
                     </Column>
+                    <Column field="name" header="FirstName" :sortable="true" headerStyle="width:10%; min-width:5rem;"
+                        :filter="true">
+                        <template #body="slotProps">
+                            <span class="p-column-title">FirstName</span>
+                            {{ slotProps.data.firstname }}
+                        </template>
+                    </Column>
+                    <Column field="name" header="LastName" :sortable="true" headerStyle="width:10%; min-width:5rem;"
+                        :filter="true">
+                        <template #body="slotProps">
+                            <span class="p-column-title">LastName</span>
+                            {{ slotProps.data.lastname }}
+                        </template>
+                    </Column>
+                    <Column field="price" header="Email" :sortable="true" headerStyle="width:10%; min-width:5rem;"
+                        :filter="true">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Email</span>
+                            {{ slotProps.data.email }}
+                        </template>
+                    </Column>
+
+                    <Column field="price" header="Phone" :sortable="true" headerStyle="width:10%; min-width:5rem;"
+                        :filter="true">
+                        <template #body="slotProps">
+                            <span class="p-column-title">Phone</span>
+                            {{ slotProps.data.phone }}
+                        </template>
+                    </Column>
+
+                    <!-- <Column field="category" header="Category" :sortable="true" headerStyle="width:20%; min-width:10rem;"
+                        :filter="true">
+                        <template #body="slotProps">
+                            <span :class="categoryClass(slotProps.data.category)">
+                                {{ categoryLabel(slotProps.data.category) }}
+                            </span>
+                        </template>
+                    </Column> -->
 
 
                     <Column headerStyle="min-width:10rem;">
