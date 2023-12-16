@@ -114,7 +114,7 @@ const fetchAudiences = async () => {
         const audienceData = doc.data();
         audienceData.id = doc.id;
 
-        if (audienceData.events_attended.includes('hod')) {
+        if (audienceData.events_attended.includes('fn10')) {
             //console.log('yes');
             audienceData.registered = true;
         } else {
@@ -181,7 +181,7 @@ const saveAudience = async () => {
         } else {
             audience.value.id = createId();
 
-            audience.events_attended = ['hod'];
+            audience.events_attended = ['fn10'];
 
             audience.registered_on = serverTimestamp();
             audience.registered_by = 'admin1';
@@ -196,7 +196,7 @@ const saveAudience = async () => {
                 phone: audience.value.phone,
                 category: audience.value.category,
                 //Events attended- an array of event ids
-                events_attended: ['hod'],
+                events_attended: ['fn10'],
                 registered_on: serverTimestamp(),
                 registered_by: 'admin1'
             };
@@ -328,19 +328,19 @@ const toggleRegistration = (data) => {
 // }
 
 const registerUser = (data) => {
-    if (data.events_attended.includes('hod')) {
+    if (data.events_attended.includes('fn10')) {
         toast.add({ severity: 'info', summary: 'Already Registered', detail: `${data.firstname} is already registered`, life: 3000 });
         //toggle the switch back to true
         data.registered = false;
         return;
     } else {
-        data.events_attended.push('hod');
+        data.events_attended.push('fn10');
         updateDoc(doc(db, collectionName, data.id),
             data
         ).then(() => {
             console.log("Document successfully updated!");
-            if (!data.events_attended.includes("hod")) {
-                data.events_attended.push("hod");
+            if (!data.events_attended.includes("fn10")) {
+                data.events_attended.push("fn10");
             }
             toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
 
@@ -385,18 +385,18 @@ const sendSMS = (data) => {
 }
 
 const deregisterUser = (data) => {
-    if (!data.events_attended.includes('hod')) {
+    if (!data.events_attended.includes('fn10')) {
         toast.add({ severity: 'info', summary: 'Already Unregistered', detail: `${data.firstname} is already unregistered`, life: 3000 });
         //toggle the switch back to true
         data.registered = true;
         return;
     } else {
-        data.events_attended = data.events_attended.filter((val) => val !== 'hod');
+        data.events_attended = data.events_attended.filter((val) => val !== 'fn10');
         updateDoc(doc(db, collectionName, data.id),
             data
         ).then(() => {
             console.log("Document successfully updated!");
-            const index = data.events_attended.indexOf("hod");
+            const index = data.events_attended.indexOf("fn10");
             if (index > -1) {
                 data.events_attended.splice(index, 1);
             }
