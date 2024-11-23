@@ -94,11 +94,11 @@ const model = ref([
             //     icon: 'pi pi-fw pi-calendar',
             //     to: '/pages/timeline'
             // },
-            // {
-            //     label: 'Not Found',
-            //     icon: 'pi pi-fw pi-exclamation-circle',
-            //     to: '/pages/notfound'
-            // },
+            {
+                label: 'Spin',
+                icon: 'pi pi-fw pi-exclamation-circle',
+                to: '/pages/spin'
+            },
             // {
             //     label: 'Empty',
             //     icon: 'pi pi-fw pi-circle-off',
