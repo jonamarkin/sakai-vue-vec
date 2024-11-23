@@ -5,7 +5,7 @@ import ProductService from '@/service/ProductService';
 import AudienceService from '@/service/AudienceService';
 import { useToast } from 'primevue/usetoast';
 
-import { doc, setDoc, serverTimestamp, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, updateDoc, deleteDoc, collection, getDocs, getFirestore, runTransaction } from "firebase/firestore";
 
 import { db } from '../../firebase/init.js';
 
@@ -96,8 +96,8 @@ const productService = new ProductService();
 const audienceService = new AudienceService();
 
 
-let collectionName = 'audiences';
-//let collectionName = 'uat_audiences';
+//let collectionName = 'audiences';
+let collectionName = 'uat_audiences';
 
 const fetchAudiences = async () => {
     const querySnapshot = await getDocs(collection(db, collectionName));
@@ -141,6 +141,7 @@ onBeforeMount(() => {
 onMounted(() => {
 
     fetchAudiences();
+    generateRegNumber();
 
 });
 const formatCurrency = (value) => {
@@ -169,7 +170,7 @@ const saveAudience = async () => {
                 console.log("Document successfully updated!");
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
                 //Send sms to the user
-                sendSMS(audience.value);
+                //sendSMS(audience.value);
                 fetchAudiences();
 
             }).catch((error) => {
@@ -179,12 +180,16 @@ const saveAudience = async () => {
             //toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Updated', life: 3000 });
 
         } else {
+
+            const regNumber = await generateRegNumber();
+
             audience.value.id = createId();
 
             audience.events_attended = ['fn11'];
 
             audience.registered_on = serverTimestamp();
             audience.registered_by = 'admin1';
+            audience.regNumber = regNumber;
 
 
 
@@ -198,14 +203,17 @@ const saveAudience = async () => {
                 //Events attended- an array of event ids
                 events_attended: ['fn11'],
                 registered_on: serverTimestamp(),
-                registered_by: 'admin1'
+                registered_by: 'admin1',
+                regNumber: regNumber
             };
 
             //Add a new document to audiences collection
             await setDoc(doc(db, collectionName, audience.value.id), docData).then(() => {
                 console.log("Document successfully written!");
                 audiences.value.push(audience.value);
-                toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Created', life: 3000 });
+                toast.add({ severity: 'success', summary: 'Successful', detail: `Audience Created With RegNumber ${audience.regNumber}`, life: 3000 });
+
+
                 sendSMS(audience.value);
                 fetchAudiences();
 
@@ -327,38 +335,57 @@ const toggleRegistration = (data) => {
 //     // Any additional logic or API calls related to the toggling action can be done here.
 // }
 
-const registerUser = (data) => {
+const registerUser = async (data) => {
     if (data.events_attended.includes('fn11')) {
-        toast.add({ severity: 'info', summary: 'Already Registered', detail: `${data.firstname} is already registered`, life: 3000 });
-        //toggle the switch back to true
+        toast.add({
+            severity: 'info',
+            summary: 'Already Registered',
+            detail: `${data.firstname} is already registered`,
+            life: 3000
+        });
+        // Toggle the switch back to true
         data.registered = false;
         return;
     } else {
-        data.events_attended.push('fn11');
-        updateDoc(doc(db, collectionName, data.id),
-            data
-        ).then(() => {
-            console.log("Document successfully updated!");
-            if (!data.events_attended.includes("fn11")) {
-                data.events_attended.push("fn11");
-            }
-            toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
+        try {
+            // Generate a unique registration number
+            const regNumber = await generateRegNumber();
 
-            //Send sms to the user
+            // Update the user's data with the new event and regNumber
+            data.events_attended.push('fn11');
+            data.regNumber = regNumber;
+
+            await updateDoc(doc(db, collectionName, data.id), data);
+
+            console.log("Document successfully updated!");
+
+            toast.add({
+                severity: 'success',
+                summary: 'Registered',
+                detail: `${data.firstname} registered successfully`,
+                life: 3000
+            });
+
+            // Send SMS to the user
             sendSMS(data);
 
-            //Fetch updated audiences
+            // Fetch updated audiences
             fetchAudiences();
 
-        }).catch((error) => {
-            // The document probably doesn't exist.
+        } catch (error) {
+            // Handle errors gracefully
             data.registered = false;
-            console.error("Error updating document: ", error);
-        });
-
-        //sendSMS(data);
+            console.error("Error registering user: ", error);
+            toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'An error occurred while registering the user.',
+                life: 3000
+            });
+        }
     }
-}
+};
+
 
 const sendSMS = (data) => {
     var myHeaders = new Headers();
@@ -408,6 +435,45 @@ const deregisterUser = (data) => {
         });
     }
 }
+
+
+const generateRegNumber = async () => {
+
+
+    //const counterDoc = doc(db, "counters/eventCounter");
+
+    let colName = 'counters';
+    const querySnapshot = await getDocs(collection(db, colName));
+
+    //Get the eventCounter document
+    let counterDoc;
+    querySnapshot.forEach((doc) => {
+        if (doc.id === 'fnCounter') {
+            counterDoc = doc.ref;
+        }
+    });
+
+    console.log(counterDoc);
+
+    try {
+        const userNumber = await runTransaction(db, async (transaction) => {
+            const counterSnapshot = await transaction.get(counterDoc);
+            const current = counterSnapshot.data()?.current || 0;
+            const newValue = current + 1;
+
+            transaction.update(counterDoc, { current: newValue });
+            return newValue;
+        });
+
+
+
+        console.log(`User registered with number: ${userNumber}`);
+        //Return the number as a number
+        return userNumber;
+    } catch (error) {
+        console.error("Transaction failed: ", error);
+    }
+};
 
 
 </script>
@@ -498,14 +564,13 @@ const deregisterUser = (data) => {
                         </template>
                     </Column>
 
-                    <!-- <Column field="category" header="Category" :sortable="true" headerStyle="width:20%; min-width:10rem;"
-                        :filter="true">
+                    <Column field="regNumber" header="RegNumber" :sortable="true"
+                        headerStyle="width:10%; min-width:5rem;" :filter="true">
                         <template #body="slotProps">
-                            <span :class="categoryClass(slotProps.data.category)">
-                                {{ categoryLabel(slotProps.data.category) }}
-                            </span>
+                            <span class="p-column-title">RegNumber</span>
+                            {{ slotProps.data.regNumber }}
                         </template>
-                    </Column> -->
+                    </Column>
 
 
                     <Column headerStyle="min-width:10rem;">
