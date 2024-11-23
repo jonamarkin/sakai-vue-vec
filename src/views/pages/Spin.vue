@@ -181,12 +181,12 @@ function generatePrizesCanvas(numPrizes = 5) {
 
 
     //Remove the selected numbers from the array so that they are not selected again
-    selectedNumbers.forEach((num) => {
-        const index = audienceNumbersArray.value.indexOf(num);
-        if (index > -1) {
-            audienceNumbersArray.value.splice(index, 1);
-        }
-    });
+    // selectedNumbers.forEach((num) => {
+    //     const index = audienceNumbersArray.value.indexOf(num);
+    //     if (index > -1) {
+    //         audienceNumbersArray.value.splice(index, 1);
+    //     }
+    // });
 
     console.log("Remaining numbers:", audienceNumbersArray.value);
 
