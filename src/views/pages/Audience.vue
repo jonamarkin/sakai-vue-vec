@@ -114,7 +114,7 @@ const fetchAudiences = async () => {
         const audienceData = doc.data();
         audienceData.id = doc.id;
 
-        if (audienceData.events_attended.includes('fn10')) {
+        if (audienceData.events_attended.includes('fn11')) {
             //console.log('yes');
             audienceData.registered = true;
         } else {
@@ -181,7 +181,7 @@ const saveAudience = async () => {
         } else {
             audience.value.id = createId();
 
-            audience.events_attended = ['fn10'];
+            audience.events_attended = ['fn11'];
 
             audience.registered_on = serverTimestamp();
             audience.registered_by = 'admin1';
@@ -196,7 +196,7 @@ const saveAudience = async () => {
                 phone: audience.value.phone,
                 category: audience.value.category,
                 //Events attended- an array of event ids
-                events_attended: ['fn10'],
+                events_attended: ['fn11'],
                 registered_on: serverTimestamp(),
                 registered_by: 'admin1'
             };
@@ -328,19 +328,19 @@ const toggleRegistration = (data) => {
 // }
 
 const registerUser = (data) => {
-    if (data.events_attended.includes('fn10')) {
+    if (data.events_attended.includes('fn11')) {
         toast.add({ severity: 'info', summary: 'Already Registered', detail: `${data.firstname} is already registered`, life: 3000 });
         //toggle the switch back to true
         data.registered = false;
         return;
     } else {
-        data.events_attended.push('fn10');
+        data.events_attended.push('fn11');
         updateDoc(doc(db, collectionName, data.id),
             data
         ).then(() => {
             console.log("Document successfully updated!");
-            if (!data.events_attended.includes("fn10")) {
-                data.events_attended.push("fn10");
+            if (!data.events_attended.includes("fn11")) {
+                data.events_attended.push("fn11");
             }
             toast.add({ severity: 'success', summary: 'Registered', detail: `${data.firstname} registered successfully`, life: 3000 });
 
@@ -385,18 +385,18 @@ const sendSMS = (data) => {
 }
 
 const deregisterUser = (data) => {
-    if (!data.events_attended.includes('fn10')) {
+    if (!data.events_attended.includes('fn11')) {
         toast.add({ severity: 'info', summary: 'Already Unregistered', detail: `${data.firstname} is already unregistered`, life: 3000 });
         //toggle the switch back to true
         data.registered = true;
         return;
     } else {
-        data.events_attended = data.events_attended.filter((val) => val !== 'fn10');
+        data.events_attended = data.events_attended.filter((val) => val !== 'fn11');
         updateDoc(doc(db, collectionName, data.id),
             data
         ).then(() => {
             console.log("Document successfully updated!");
-            const index = data.events_attended.indexOf("fn10");
+            const index = data.events_attended.indexOf("fn11");
             if (index > -1) {
                 data.events_attended.splice(index, 1);
             }
@@ -421,7 +421,8 @@ const deregisterUser = (data) => {
                     <template v-slot:start>
                         <div class="my-2">
                             <Button label="New" icon="pi pi-plus" class="p-button-success mr-2" @click="openNew" />
-                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected"
+                            <Button label="Delete" icon="pi pi-trash" class="p-button-danger"
+                                @click="confirmDeleteSelected"
                                 :disabled="!selectedAudiences || !selectedAudiences.length" />
                         </div>
                     </template>
@@ -437,7 +438,8 @@ const deregisterUser = (data) => {
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     :rowsPerPageOptions="[5, 10, 25]"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} audiences"
-                    :globalFilterFields="['firstname', 'lastname', 'email', 'phone', 'category']" responsiveLayout="scroll">
+                    :globalFilterFields="['firstname', 'lastname', 'email', 'phone', 'category']"
+                    responsiveLayout="scroll">
                     <template #header>
                         <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
                             <h5 class="m-0">Manage Audience</h5>
@@ -452,7 +454,8 @@ const deregisterUser = (data) => {
 
                     <Column headerStyle="width: 3rem;" header="Register">
                         <template #body="slotProps">
-                            <InputSwitch v-model="slotProps.data.registered" @change="toggleRegistration(slotProps.data)" />
+                            <InputSwitch v-model="slotProps.data.registered"
+                                @change="toggleRegistration(slotProps.data)" />
                         </template>
 
                     </Column>
@@ -515,10 +518,10 @@ const deregisterUser = (data) => {
                     </Column>
                 </DataTable>
 
-                <Dialog v-model:visible="audienceDialog" :style="{ width: '450px' }" header="Audience Details" :modal="true"
-                    class="p-fluid">
-                    <img :src="'demo/images/product/' + product.image" :alt="product.image" v-if="product.image" width="150"
-                        class="mt-0 mx-auto mb-5 block shadow-2" />
+                <Dialog v-model:visible="audienceDialog" :style="{ width: '450px' }" header="Audience Details"
+                    :modal="true" class="p-fluid">
+                    <img :src="'demo/images/product/' + product.image" :alt="product.image" v-if="product.image"
+                        width="150" class="mt-0 mx-auto mb-5 block shadow-2" />
                     <div class="field">
                         <label for="name">Firstname</label>
                         <InputText id="name" v-model.trim="audience.firstname" required="true" autofocus
@@ -552,15 +555,18 @@ const deregisterUser = (data) => {
                         <label class="mb-3">Category</label>
                         <div class="formgrid grid">
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category1" name="category" value="regular" v-model="audience.category" />
+                                <RadioButton id="category1" name="category" value="regular"
+                                    v-model="audience.category" />
                                 <label for="category1">Regular</label>
                             </div>
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category2" name="category" value="special" v-model="audience.category" />
+                                <RadioButton id="category2" name="category" value="special"
+                                    v-model="audience.category" />
                                 <label for="category2">Special Guest</label>
                             </div>
                             <div class="field-radiobutton col-6">
-                                <RadioButton id="category3" name="category" value="patron" v-model="audience.category" />
+                                <RadioButton id="category3" name="category" value="patron"
+                                    v-model="audience.category" />
                                 <label for="category3">Patron</label>
                             </div>
 
@@ -574,18 +580,21 @@ const deregisterUser = (data) => {
                     </template>
                 </Dialog>
 
-                <Dialog v-model:visible="deleteAudienceDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                <Dialog v-model:visible="deleteAudienceDialog" :style="{ width: '450px' }" header="Confirm"
+                    :modal="true">
                     <div class="flex align-items-center justify-content-center">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
                         <span v-if="audience">Are you sure you want to delete <b>{{ audience.firstname }}</b>?</span>
                     </div>
                     <template #footer>
-                        <Button label="No" icon="pi pi-times" class="p-button-text" @click="deleteAudienceDialog = false" />
+                        <Button label="No" icon="pi pi-times" class="p-button-text"
+                            @click="deleteAudienceDialog = false" />
                         <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteAudience" />
                     </template>
                 </Dialog>
 
-                <Dialog v-model:visible="deleteAudiencesDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                <Dialog v-model:visible="deleteAudiencesDialog" :style="{ width: '450px' }" header="Confirm"
+                    :modal="true">
                     <div class="flex align-items-center justify-content-center">
                         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
                         <span v-if="product">Are you sure you want to delete the selected audiences?</span>

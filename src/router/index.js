@@ -163,6 +163,11 @@ const router = createRouter({
             name: 'notfound',
             component: () => import('@/views/pages/NotFound.vue')
         },
+        {
+            path: '/pages/spin',
+            name: 'spin',
+            component: () => import('@/views/pages/Spin.vue')
+        },
 
         {
             path: '/auth/login',
