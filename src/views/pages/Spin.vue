@@ -122,6 +122,9 @@ function onRotateEnd(prize) {
     console.log('onRotateEnd', prize)
     winner.value.name = prize.value
     winner.value.num = prize.value
+
+    //Regerate the prizesCanvas
+    generatePrizesCanvas();
 }
 
 function onChangePrize(id) {
@@ -175,6 +178,18 @@ function generatePrizesCanvas(numPrizes = 5) {
     console.log("Audience numbers:", audienceNumbersArray.value);
     console.log("Selected numbers:", selectedNumbers);
     console.log("Generated prizesCanvas:", prizesCanvas.value);
+
+
+    //Remove the selected numbers from the array so that they are not selected again
+    selectedNumbers.forEach((num) => {
+        const index = audienceNumbersArray.value.indexOf(num);
+        if (index > -1) {
+            audienceNumbersArray.value.splice(index, 1);
+        }
+    });
+
+    console.log("Remaining numbers:", audienceNumbersArray.value);
+
 }
 
 // // Example usage
