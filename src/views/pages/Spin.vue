@@ -12,7 +12,7 @@ import { db } from '../../firebase/init.js';
 const prizeId = ref(0)
 const winnerdialog = ref(false)
 
-const audienceNumbersArray = ref([]);
+const audienceNumbersArray = ref(Array.from({ length: 85 }, (_, i) => i + 1)); // Array of numbers from 1 to 85
 
 let winner = ref({
 
@@ -82,7 +82,7 @@ const prizeRes = computed(() => {
 
 onMounted(async () => {
     //wheelEl.value.startRotate() // Can start rotation
-    await fetchAudienceNumber();
+    //await fetchAudienceNumber();
     generatePrizesCanvas();
 })
 
