@@ -448,7 +448,7 @@ const generateRegNumber = async () => {
     //Get the eventCounter document
     let counterDoc;
     querySnapshot.forEach((doc) => {
-        if (doc.id === 'fnCounter') {
+        if (doc.id === 'fnxiCounter') {
             counterDoc = doc.ref;
         }
     });
