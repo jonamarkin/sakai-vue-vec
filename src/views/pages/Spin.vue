@@ -12,9 +12,9 @@ import { db } from '../../firebase/init.js';
 const prizeId = ref(0)
 const winnerdialog = ref(false)
 
-//const audienceNumbersArray = ref(Array.from({ length: 85 }, (_, i) => i + 1)); // Array of numbers from 1 to 85
+let audienceNumbersArray = ref(Array.from({ length: 85 }, (_, i) => i + 1)); // Array of numbers from 1 to 85
 
-let audienceNumbersArray = ref(Array.from({ length: 3 }, (_, i) => i + 1));
+//let audienceNumbersArray = ref(Array.from({ length: 3 }, (_, i) => i + 1));
 
 let winner = ref({
 
