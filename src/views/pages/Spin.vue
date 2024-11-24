@@ -12,13 +12,23 @@ import { db } from '../../firebase/init.js';
 const prizeId = ref(0)
 const winnerdialog = ref(false)
 
-const audienceNumbersArray = ref(Array.from({ length: 85 }, (_, i) => i + 1)); // Array of numbers from 1 to 85
+//const audienceNumbersArray = ref(Array.from({ length: 85 }, (_, i) => i + 1)); // Array of numbers from 1 to 85
+
+let audienceNumbersArray = ref(Array.from({ length: 3 }, (_, i) => i + 1));
 
 let winner = ref({
 
     num: '01',
     name: 'VocalEssence Chorale',
 })
+
+//Function to remove the selected number from the array
+function removeNumberFromArray(num) {
+    const index = audienceNumbersArray.value.indexOf(num);
+    if (index > -1) {
+        audienceNumbersArray.value.splice(index, 1);
+    }
+}
 
 const wheelEl = ref()
 const canvasVerify = ref(false) // Whether the turntable in canvas mode is enabled for verification
@@ -124,6 +134,9 @@ function onRotateEnd(prize) {
     winner.value.num = prize.value
 
     //Regerate the prizesCanvas
+    //Remove the selected number from the array
+    removeNumberFromArray(prize.value);
+    console.log("Remaining numbers:", audienceNumbersArray.value);
     generatePrizesCanvas();
 }
 
@@ -150,45 +163,88 @@ const fetchAudienceNumber = async () => {
 function generatePrizesCanvas(numPrizes = 5) {
     // Ensure the number of prizes doesn't exceed the available numbers
     if (audienceNumbersArray.value.length < numPrizes) {
-        throw new Error("Not enough numbers in the array to pick prizes.");
+
+        //Add additional numbers of values 0 to make up the number of prizes
+        const additionalNumbers = Array.from({ length: numPrizes - audienceNumbersArray.value.length }, (_, i) => 0);
+        audienceNumbersArray.value.push(...additionalNumbers);
+        console.log("Additional numbers:", additionalNumbers);
+        console.log("Audience numbers:", audienceNumbersArray.value);
+
+        // Shuffle the array and pick the first `numPrizes` numbers
+        const shuffled = [...audienceNumbersArray.value].sort(() => Math.random() - 0.5);
+        const selectedNumbers = shuffled.slice(0, numPrizes);
+
+        // Colors for background and text
+        const bgColors = ['#45ace9', '#dd3832', '#fef151', '#7ac143', '#a349a4'];
+        const textColor = '#ffffff';
+
+        // Calculate equal probability
+        const probability = +(100 / numPrizes).toFixed(4);
+
+        // Generate prizesCanvas
+        prizesCanvas.value = selectedNumbers.map((num, index) => ({
+            id: num, // Use the number itself as the ID
+            name: num.toString(),
+            value: num,
+            bgColor: bgColors[index % bgColors.length],
+            color: textColor,
+            probability: probability
+        }));
+
+
+        console.log("Audience numbers:", audienceNumbersArray.value);
+        console.log("Selected numbers:", selectedNumbers);
+
+        //Remove the selected numbers from the array so that they are not selected again
+        // selectedNumbers.forEach((num) => {
+        //     const index = audienceNumbersArray.value.indexOf(num);
+        //     if (index > -1) {
+        //         audienceNumbersArray.value.splice(index, 1);
+        //     }
+        // });
+
+        console.log("Remaining numbers:", audienceNumbersArray.value);
+
+    } else {
+        // Shuffle the array and pick the first `numPrizes` numbers
+        const shuffled = [...audienceNumbersArray.value].sort(() => Math.random() - 0.5);
+        const selectedNumbers = shuffled.slice(0, numPrizes);
+
+        // Colors for background and text
+        const bgColors = ['#45ace9', '#dd3832', '#fef151', '#7ac143', '#a349a4'];
+        const textColor = '#ffffff';
+
+        // Calculate equal probability
+        const probability = +(100 / numPrizes).toFixed(4);
+
+        // Generate prizesCanvas
+        prizesCanvas.value = selectedNumbers.map((num, index) => ({
+            id: num, // Use the number itself as the ID
+            name: num.toString(),
+            value: num,
+            bgColor: bgColors[index % bgColors.length],
+            color: textColor,
+            probability: probability
+        }));
+
+
+        console.log("Audience numbers:", audienceNumbersArray.value);
+        console.log("Selected numbers:", selectedNumbers);
+        console.log("Generated prizesCanvas:", prizesCanvas.value);
+
+
+        //Remove the selected numbers from the array so that they are not selected again
+        // selectedNumbers.forEach((num) => {
+        //     const index = audienceNumbersArray.value.indexOf(num);
+        //     if (index > -1) {
+        //         audienceNumbersArray.value.splice(index, 1);
+        //     }
+        // });
+
+        console.log("Remaining numbers:", audienceNumbersArray.value);
     }
 
-    // Shuffle the array and pick the first `numPrizes` numbers
-    const shuffled = [...audienceNumbersArray.value].sort(() => Math.random() - 0.5);
-    const selectedNumbers = shuffled.slice(0, numPrizes);
 
-    // Colors for background and text
-    const bgColors = ['#45ace9', '#dd3832', '#fef151', '#7ac143', '#a349a4'];
-    const textColor = '#ffffff';
-
-    // Calculate equal probability
-    const probability = +(100 / numPrizes).toFixed(4);
-
-    // Generate prizesCanvas
-    prizesCanvas.value = selectedNumbers.map((num, index) => ({
-        id: num, // Use the number itself as the ID
-        name: num.toString(),
-        value: num,
-        bgColor: bgColors[index % bgColors.length],
-        color: textColor,
-        probability: probability
-    }));
-
-
-    console.log("Audience numbers:", audienceNumbersArray.value);
-    console.log("Selected numbers:", selectedNumbers);
-    console.log("Generated prizesCanvas:", prizesCanvas.value);
-
-
-    //Remove the selected numbers from the array so that they are not selected again
-    selectedNumbers.forEach((num) => {
-        const index = audienceNumbersArray.value.indexOf(num);
-        if (index > -1) {
-            audienceNumbersArray.value.splice(index, 1);
-        }
-    });
-
-    console.log("Remaining numbers:", audienceNumbersArray.value);
 
 }
 
