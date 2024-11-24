@@ -132,8 +132,8 @@ function onChangePrize(id) {
 }
 
 
-let collectionName = 'audiences';
-//let collectionName = 'uat_audiences';
+//let collectionName = 'audiences';
+let collectionName = 'uat_audiences';
 
 const fetchAudienceNumber = async () => {
     //Fetch the number in the collection that have fn11 in their events_attended array
