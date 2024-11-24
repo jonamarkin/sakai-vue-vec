@@ -96,8 +96,8 @@ const productService = new ProductService();
 const audienceService = new AudienceService();
 
 
-//let collectionName = 'audiences';
-let collectionName = 'uat_audiences';
+let collectionName = 'audiences';
+//let collectionName = 'uat_audiences';
 
 const fetchAudiences = async () => {
     const querySnapshot = await getDocs(collection(db, collectionName));
