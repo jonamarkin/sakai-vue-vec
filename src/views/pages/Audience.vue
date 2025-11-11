@@ -96,7 +96,7 @@ const productService = new ProductService();
 const audienceService = new AudienceService();
 
 
-let collectionName = 'audiences';
+let collectionName = 'uat_audiences';
 //let collectionName = 'uat_audiences';
 
 const fetchAudiences = async () => {
@@ -114,7 +114,7 @@ const fetchAudiences = async () => {
         const audienceData = doc.data();
         audienceData.id = doc.id;
 
-        if (audienceData.events_attended.includes('fn11')) {
+        if (audienceData.events_attended.includes('fn12')) {
             //console.log('yes');
             audienceData.registered = true;
         } else {
@@ -185,7 +185,7 @@ const saveAudience = async () => {
 
             audience.value.id = createId();
 
-            audience.events_attended = ['fn11'];
+            audience.events_attended = ['fn12'];
 
             audience.registered_on = serverTimestamp();
             audience.registered_by = 'admin1';
@@ -201,7 +201,7 @@ const saveAudience = async () => {
                 phone: audience.value.phone,
                 category: audience.value.category,
                 //Events attended- an array of event ids
-                events_attended: ['fn11'],
+                events_attended: ['fn12'],
                 registered_on: serverTimestamp(),
                 registered_by: 'admin1',
                 regNumber: regNumber
@@ -241,14 +241,20 @@ const confirmDeleteAudience = (editAudience) => {
 };
 
 const deleteAudience = async () => {
+    // remove locally first
     audiences.value = audiences.value.filter((val) => val.id !== audience.value.id);
-    await deleteDoc(doc(db, audience.value, audience.value.id));
 
-    deleteAudienceDialog.value = false;
-    audience.value = {};
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Deleted', life: 3000 });
-
-
+    try {
+        // use collectionName (string) as the second arg, not audience.value (object)
+        await deleteDoc(doc(db, collectionName, audience.value.id));
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Audience Deleted', life: 3000 });
+    } catch (err) {
+        console.error('Error deleting audience:', err);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete audience', life: 3000 });
+    } finally {
+        deleteAudienceDialog.value = false;
+        audience.value = {};
+    }
 };
 
 const findIndexById = (id) => {
@@ -336,7 +342,7 @@ const toggleRegistration = (data) => {
 // }
 
 const registerUser = async (data) => {
-    if (data.events_attended.includes('fn11')) {
+    if (data.events_attended.includes('fn12')) {
         toast.add({
             severity: 'info',
             summary: 'Already Registered',
@@ -352,7 +358,7 @@ const registerUser = async (data) => {
             const regNumber = await generateRegNumber();
 
             // Update the user's data with the new event and regNumber
-            data.events_attended.push('fn11');
+            data.events_attended.push('fn12');
             data.regNumber = regNumber;
 
             await updateDoc(doc(db, collectionName, data.id), data);
@@ -412,18 +418,18 @@ const sendSMS = (data) => {
 }
 
 const deregisterUser = (data) => {
-    if (!data.events_attended.includes('fn11')) {
+    if (!data.events_attended.includes('fn12')) {
         toast.add({ severity: 'info', summary: 'Already Unregistered', detail: `${data.firstname} is already unregistered`, life: 3000 });
         //toggle the switch back to true
         data.registered = true;
         return;
     } else {
-        data.events_attended = data.events_attended.filter((val) => val !== 'fn11');
+        data.events_attended = data.events_attended.filter((val) => val !== 'fn12');
         updateDoc(doc(db, collectionName, data.id),
             data
         ).then(() => {
             console.log("Document successfully updated!");
-            const index = data.events_attended.indexOf("fn11");
+            const index = data.events_attended.indexOf("fn12");
             if (index > -1) {
                 data.events_attended.splice(index, 1);
             }
