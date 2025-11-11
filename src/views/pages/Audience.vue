@@ -408,7 +408,7 @@ const sendSMS = (data) => {
         redirect: 'follow'
     };
 
-    fetch("https://vecbackend-production.up.railway.app/sms", requestOptions)
+    fetch("https://vecbackend.atomarkin.com/sms", requestOptions)
         .then(response => response.text())
         .then(result => console.log(result))
         .then(() => {
