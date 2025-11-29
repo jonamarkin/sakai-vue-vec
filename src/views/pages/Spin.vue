@@ -6,6 +6,7 @@ import 'vue-spin-the-wheel/style.css'
 import { doc, setDoc, serverTimestamp, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from '../../firebase/init.js';
 
+
 const prizeId = ref(0)
 const winnerdialog = ref(false)
 const showConfetti = ref(false)
